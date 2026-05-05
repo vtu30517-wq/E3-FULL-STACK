@@ -1,0 +1,130 @@
+PROGRAM: 
+INDEX.HTML: 
+<!DOCTYPE html> 
+<html> 
+<head> 
+<title>Microservices App</title> 
+<link rel="stylesheet" href="style.css"> 
+</head> 
+<body> 
+<div class="container"> 
+    <h2>Microservices Demo</h2> 
+    <input id="pname" placeholder="Product Name"> 
+    <button onclick="addProduct()">Add Product</button> 
+    <input id="order" placeholder="Order Item"> 
+    <button onclick="addOrder()">Place Order</button> 
+</div> 
+<script src="script.js"></script> 
+</body> 
+</html> 
+STYLE.CSS: 
+body { 
+    font-family: Arial; 
+    background: #1e1e2f; 
+    color: white; 
+    display:flex; 
+    justify-content:center; 
+    align-items:center; 
+    height:100vh; 
+} 
+.container { 
+    text-align:center; 
+} 
+input { 
+    margin: 5px; 
+    padding: 8px; 
+} 
+button { 
+    padding: 8px; 
+    margin: 5px; 
+    background: #00c6ff; 
+    border: none; 
+} 
+SCRIPT.JS: 
+function addProduct() { 
+    fetch("http://localhost:3001/products", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ name: val("pname") }) 
+    }); 
+} 
+function addOrder() { 
+    fetch("http://localhost:3002/orders", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ item: val("order") }) 
+    }); 
+} 
+function val(id) { 
+    return document.getElementById(id).value; 
+} 
+SERVER.JS: 
+const express = require("express"); 
+const cors = require("cors"); 
+const db = require("./db"); 
+const app = express(); 
+app.use(cors()); 
+app.use(express.json()); 
+// GET products 
+app.get("/products", (req, res) => { 
+res.json(db.getAll()); 
+}); 
+// ADD product 
+app.post("/products", (req, res) => { 
+db.add(req.body); 
+res.json({ msg: "Product added" }); 
+}); 
+app.listen(3001, () => { 
+console.log("Product Service running at http://localhost:3001"); 
+}); 
+DB.JS: 
+let products = []; 
+function add(p) { 
+products.push(p); 
+} 
+function getAll() { 
+return products; 
+} 
+module.exports = { add, getAll }; 
+OUTPUT: 
+1. GET : http://localhost:3001/products 
+2. POST: http://localhost:3001/products 
+RESULTS: The application was successfully divided into independent microservices with 
+separate responsibilities and communication via REST APIs 
+TASK15: Service Registry App 
+Aim: To implement service registry and discovery using Node.js by dynamically registering and 
+discovering microservices without hard-coded URLs. 
+ALGORITHM: 
+1. Start the program  
+2. Create a registry server  
+3. Store service name and URL in memory  
+4. Start Product Service  
+5. Register Product Service to registry  
+6. Start Order Service  
+7. Register Order Service to registry  
+8. Maintain service list in registry  
+9. Client requests service from registry  
+10. Fetch service URL dynamically  
+11. Call the discovered service API  
+12. Stop the program  
+PROGRAM: 
+SERVER.JS: 
+const express = require("express"); 
+const app = express(); 
+app.use(express.json()); 
+let services = {}; 
+app.post("/register", (req, res) => { 
+const { name, url } = req.body; 
+services[name] = url; 
+console.log(`${name} registered at ${url}`); 
+res.json({ msg: "Registered" }); 
+}); 
+app.get("/service/:name", (req, res) => { 
+const service = services[req.params.name]; 
+if (!service) { 
+return res.status(404).json({ error: "Service not found" }) 
+res.json({ url: service }); 
+}); 
+app.listen(4000, () => { 
+console.log("Registry running at http://localhost:4000"); 
+}); 
